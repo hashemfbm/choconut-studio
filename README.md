@@ -21,17 +21,30 @@
 
 ۴. برای بنر، عکس محصول را اضافه کنید. پس از ذخیره، در **گزارش‌ها** سه خروجی بهای تمام‌شده، ارزش غذایی و بنر در دسترس است. هر سه گزارش را می‌توان به صورت PNG و PDF دریافت کرد. دکمهٔ ارسال در مرورگرهای سازگار فایل را به منوی اشتراک‌گذاری دستگاه می‌دهد. در بقیهٔ مرورگرها می‌توانید فایل را دانلود و به پیام پیوست کنید.
 
+### پشتیبان‌گیری
+
+از دکمهٔ **پشتیبان** در نوار بالای برنامه، فایل JSON شامل مواد اولیه، دستورها، قیمت‌ها و عکس‌های ذخیره‌شده را دانلود کنید. برای انتقال به مرورگر یا دستگاه دیگر، همان فایل را انتخاب کنید و بعد از بررسی تعداد مواد و محصولات، جایگزینی را تأیید کنید. هر فایل پشتیبان حداکثر ۱۲۸ مگابایت است.
+
 ### محاسبات و داده‌ها
 
 - هزینهٔ هر ماده برابر است با وزن مصرفی به گرم ضرب در قیمت هر کیلو و تقسیم بر ۱۰۰۰. بهای بچ، جمع هزینهٔ مواد و هزینه‌های جانبی است. بهای هر کیلو بر مبنای وزن نهایی بچ محاسبه می‌شود.
 - ارزش غذایی کل بچ از جمع مقادیر وزنی مواد به دست می‌آید. مقادیر هر ۱۰۰ گرم و هر وعده بر اساس وزن نهایی بچ به دست می‌آیند. علامت «—» برای مقدار نامشخص نمایش داده می‌شود.
+- ورودی‌های عددی، ارقام فارسی، عربی و لاتین را می‌پذیرند و هنگام تایپ با جداکنندهٔ هزارگان «٬» نمایش داده می‌شوند. برای اعشار از «٫» یا نقطه استفاده کنید.
 - برنامه یک نسخه از قیمت و داده‌های تغذیه‌ای هر ماده را در دستور ذخیره می‌کند. از گزینهٔ به‌روزرسانی در فرم محصول می‌توانید اطلاعات جدید را از فهرست مواد اولیه دریافت کنید.
 - اطلاعات و عکس‌ها در مرورگر همین دستگاه ذخیره می‌شوند. نسخهٔ فایل و نسخهٔ آنلاین فضای ذخیرهٔ جدا دارند. برای شروع، چند محصول و مادهٔ نمونه وجود دارد که از صفحهٔ مواد اولیه یا محصولات قابل پاک‌کردن‌اند.
+
+### امنیت و نگهداری
+
+سیاست امنیت محتوا فقط اسکریپت‌های داخلی با هش ثبت‌شده را اجرا می‌کند. عکس‌ها بر اساس نوع فایل بررسی و برای ذخیره به JPEG تبدیل می‌شوند. بازیابی پشتیبان، ساختار داده و عکس‌ها را پیش از هر تغییر در فضای کاری بررسی می‌کند.
+
+بعد از هر تغییر در اسکریپت یا استایل HTML، `node tools/csp.mjs --write` را اجرا کنید. `node tools/csp.mjs` مطابقت هش‌ها را بررسی می‌کند. هنگام انتشار نسخهٔ جدید آفلاین، شمارهٔ کش در `sw.js` را تغییر دهید.
 
 ### اجزای بصری
 
 فونت [وزیرمتن](https://github.com/rastikerdar/vazirmatn/tree/v33.003) تحت مجوز SIL Open Font License 1.1 در HTML جاسازی شده است. متن مجوز در `FONT-OFL.txt` قرار دارد.
 
-عکس شکلات و فندقِ پیشخوان با ImageGen ساخته و در `index.html` جاسازی شده است. درخواست تولید تصویر
+لوگوی اصلی چوکو‌نات با شعار **Cocoa. Nuts. Fuel Your Move.** در صفحهٔ شروع، رابط و خروجی‌های تصویری و PDF قرار دارد. [لوگو همراه شعار](brand/choconut-lockup.png)
 
-> Use case: photorealistic-natural. Asset type: landscape hero photograph in a professional Persian confectionery recipe-costing dashboard, with space for a dark plum CSS color overlay at the right. Primary request: rich editorial macro food photography of a pile of broken glossy and matte dark chocolate blocks, cracked cocoa nibs, three warm tan hazelnuts, cracked light beige nut shells, scattered cocoa powder. Scene: deep cool aubergine seamless tabletop, slightly misty fine cocoa powder texture, a single vignette and crisp studio side light. Concentrate all subjects in the left and middle-left, and keep the right third clean continuous dark purple. Wide landscape framing 3:2, high-end artisan confectionery photography from an oblique overhead angle with shallow depth of field, rich browns and toasted copper accent light, deep midnight plum shadows. Aim for convincing natural variations in chocolate textures, a strong silhouette suitable for desktop and mobile cropping. No text, no logos, no border, no panels, no people, no plates, no packaging.
+عکس شکلات و مغزهای پیشخوان با ImageGen ساخته و در `index.html` جاسازی شده است. درخواست تولید تصویر
+
+> Use case: photorealistic-natural. Asset type: wide left-side hero photograph for the Choconut artisan chocolate and nuts recipe dashboard. Brand colors drawn from its logo: warm dark cacao brown and vivid burnt orange. Composition: on the left and center-left, a rich close-up of broken dark chocolate blocks, roasted hazelnuts and almonds, and a light scattering of cocoa dust on a genuinely dark warm chocolate-brown seamless tabletop. The center-right and right are clean dark warm brown fading smoothly into the backdrop, ready for a CSS overlay. Editorial commercial food photography, oblique overhead camera, amber side lighting, layered warm brown with caramel highlights, and natural surface textures. The food arrangement should be substantial but not overfill the frame. 3:2 landscape. No purple, pink, lettering, logos, packaging, bowls, people or watermarks.
