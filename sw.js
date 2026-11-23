@@ -2,7 +2,7 @@
 
 const scope = new URL(self.registration.scope);
 const prefix = `choconut-studio:${scope.pathname}:`;
-const cacheName = prefix + '2026-11-24-1';
+const cacheName = prefix + '2026-11-24-2';
 const entry = new URL('index.html',scope);
 const assets = [
   entry.href,

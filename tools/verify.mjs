@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import {runInNewContext} from 'node:vm';
@@ -9,8 +10,9 @@ const source = scripts.at(-1)[1].replace(/\binit\(\);\s*$/,'');
 const node = {addEventListener(){}};
 const document = {...node,querySelector:() => node,documentElement:{style:{setProperty(){}}}};
 const app = runInNewContext(source + `\n({
-  allocateMolds,bannerPages,computeRecipe,format,parseBackup,pricePerKilo,reportModel,sheetPages,snapshot,validDay,workspaceData,
-})`,{document,window:node,atob});
+  allocateMolds,bannerPages,calendarMonth,code128Symbols,computeRecipe,format,isoDay,nextBatchNumber,parseBackup,
+  pricePerKilo,productCode,reportModel,sheetPages,snapshot,validDay,workspaceData,
+})`,{document,window:node,atob,crypto:webcrypto});
 
 const pricingDate = 1795536000000;
 const hazelnut = {id:'hazelnut',name:'فندق',pricing:{amount:820000,unit:'kg',packGrams:null,updatedAt:pricingDate},nutrition:{energy:646}};
@@ -21,6 +23,7 @@ const recipe = {
   rows:[{...app.snapshot(hazelnut),grams:300},{...app.snapshot(cocoa),grams:200}],
 };
 const batch = {...recipe,number:'ت-۴۲',date:'2026-11-24',molds:[{grams:50,quantity:5},{grams:70,quantity:null}]};
+const equalBatch = {...recipe,id:'sample-equal-batch',number:'F6HTW0M3',date:'2026-11-24',quantity:3};
 
 test('converts kilogram, gram and package pricing using net weight',() => {
   assert.equal(app.pricePerKilo(hazelnut.pricing),820000);
@@ -55,6 +58,50 @@ test('rejects over-allocation and multiple automatic sizes without dropping frac
   assert.equal(app.allocateMolds([{grams:.1,quantity:null}],.3,100).groups[0].quantity,3);
 });
 
+test('splits the summed production weight and preserves full cost across rounded units',() => {
+  const result = app.computeRecipe(equalBatch);
+  const unit = result.allocation.groups[0];
+  assert.equal(result.rawWeight,500);
+  assert.equal(result.finishedWeight,500);
+  assert.equal(unit.grams,167);
+  assert.equal(unit.unitCost,120000);
+  assert.equal(unit.quantity,3);
+  assert.equal(unit.weight,500);
+  assert.equal(unit.cost,result.totalCost);
+  assert.equal(result.allocation.leftover,0);
+  assert.equal(result.serving,167);
+});
+
+test('creates unique uppercase production numbers and keeps product codes stable on edits',() => {
+  const records = [equalBatch];
+  for (let i = 0; i < 30; i += 1) {
+    const number = app.nextBatchNumber(records);
+    assert.match(number,/^[A-Z][0-9][A-Z0-9]{6}$/);
+    assert.ok(records.every(record => record.number !== number));
+    records.push({number});
+  }
+  const code = app.productCode(equalBatch);
+  assert.match(code,/^CN-[0-9A-Z]{13}$/);
+  assert.equal(app.productCode({...equalBatch,name:'ویرایش تولید',quantity:5}),code);
+  assert.notEqual(app.productCode({...equalBatch,id:'copy'}),code);
+  assert.notEqual(app.productCode({...recipe,id:equalBatch.id}),code);
+  const label = app.reportModel({...equalBatch,serving:25},'label').label;
+  assert.equal(label.code,code);
+  assert.equal(label.servingSize,'25 g');
+  assert.equal(label.energy,'119.7 kcal');
+  assert.deepEqual(Array.from(app.code128Symbols('CN-A1')),[104,35,46,13,33,17,75,106]);
+});
+
+test('finds Persian month boundaries, including leap Esfand and Nowruz',() => {
+  const esfand = app.calendarMonth(1403,12);
+  assert.equal(esfand.last - esfand.first + 1,30);
+  assert.equal(app.isoDay(esfand.last),'2025-03-20');
+  const farvardin = app.calendarMonth(1404,1);
+  assert.equal(app.isoDay(farvardin.first),'2025-03-21');
+  assert.equal(farvardin.last - farvardin.first + 1,31);
+  assert.equal(app.calendarMonth(1404,12).last - app.calendarMonth(1404,12).first + 1,29);
+});
+
 test('scales both banner tables by the same requested weight',() => {
   const banner = app.reportModel(batch,'banner').banner;
   assert.equal(banner.weight,60);
@@ -73,7 +120,7 @@ test('paginates a report without dropping rows or repeating totals',() => {
   assert.equal(plans.flatMap(page => page.segments.filter(segment => segment.total)).length,1);
 });
 
-test('migrates version-one backups and validates current production backups',() => {
+test('reads all supported backup formats and validates both production types',() => {
   const legacy = {id:'old-food',name:'مادهٔ قدیمی',price:300000,nutrition:{energy:600}};
   const oldRecipe = {...recipe,rows:[{ingredientId:legacy.id,name:legacy.name,grams:480,price:legacy.price,nutrition:legacy.nutrition}]};
   delete oldRecipe.bannerWeight;
@@ -88,6 +135,14 @@ test('migrates version-one backups and validates current production backups',() 
   assert.equal(restored.ingredients[1].pricing.updatedAt,pricingDate);
   assert.throws(() => app.workspaceData({...data,batches:[batch,{...batch,id:'other',number:'ت-42'}]}));
   assert.throws(() => app.workspaceData({...data,batches:[{...batch,molds:[{grams:1000,quantity:2}]}]}));
+  const current = app.parseBackup(JSON.stringify({type:'choconut-studio',version:3,data:{...data,batches:[batch,equalBatch]}}));
+  assert.equal(current.batches[0].finishedWeight,480);
+  assert.equal(current.batches[1].quantity,3);
+  assert.equal(current.batches[1].finishedWeight,null);
+  assert.equal(app.productCode(current.batches[1]),app.productCode(equalBatch));
+  for (const quantity of [null,0,3.5,'3',Infinity]) {
+    assert.throws(() => app.workspaceData({...data,batches:[{...equalBatch,quantity}]}));
+  }
   assert.equal(app.validDay('2026-02-30'),false);
   assert.equal(app.validDay('2026-11-24'),true);
 });
